@@ -1,0 +1,111 @@
+﻿@model FilmBase.Models.DTOs.TmdbMovieDto
+@{
+    ViewData["Title"] = Model.Title;
+    var userLists = ViewBag.UserLists as IEnumerable<FilmBase.Models.Category>;
+}
+
+<div class="container mt-5 text-white">
+    <div class="row">
+        <!-- Left Side: Poster -->
+        <div class="col-md-4 mb-4">
+            @if (!string.IsNullOrEmpty(Model.PosterPath))
+            {
+                <img src="https://image.tmdb.org/t/p/w500@(Model.PosterPath)" class="img-fluid rounded shadow-lg w-100" alt="@Model.Title">
+            }
+        </div>
+
+        <!-- Right Side: Details & Cast -->
+        <div class="col-md-8">
+            <h1 class="fw-bold mb-1">@Model.Title</h1>
+            <p class="text-light opacity-75 fs-5 mb-4">
+                @(string.IsNullOrEmpty(Model.ReleaseDate) ? "Unknown Year" : Model.ReleaseDate.Substring(0, 4)) 
+                @if (Model.Runtime.HasValue && Model.Runtime > 0)
+                {
+                    <span>&bull; @Model.Runtime min</span>
+                }
+                @if (Model.VoteAverage.HasValue)
+                {
+                    <span>&bull; ⭐ @Model.VoteAverage.Value.ToString("0.1")/10</span>
+                }
+            </p>
+
+            <h4 class="mb-3 border-bottom border-secondary pb-2">Overview</h4>
+            <p class="fs-5 text-light opacity-75 mb-4" style="line-height: 1.6;">
+                @(string.IsNullOrEmpty(Model.Overview) ? "No overview available." : Model.Overview)
+            </p>
+
+            <h4 class="mb-3 border-bottom border-secondary pb-2">Top Cast</h4>
+            <p class="fs-5 text-light opacity-75">
+                @if (Model.Credits?.Cast != null && Model.Credits.Cast.Any())
+                {
+                    @string.Join(", ", Model.Credits.Cast.Take(6).Select(c => c.Name))
+                }
+                else
+                {
+                    <span>Cast information unavailable.</span>
+                }
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button (FAB) -->
+<button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center" 
+        style="position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; font-size: 32px; z-index: 1000;"
+        data-bs-toggle="modal" data-bs-target="#watchlistModal">
+    +
+</button>
+
+<!-- List Management Modal -->
+<div class="modal fade" id="watchlistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Save to List</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                @if (userLists != null && userLists.Any())
+                {
+                    <ul class="list-group list-group-flush mb-4 rounded">
+                        @foreach (var list in userLists)
+                        {
+                            // Check if this exact movie is already saved in this specific list
+                            bool isInList = list.WatchlistItems != null && list.WatchlistItems.Any(i => i.TmdbId == Model.Id);
+                            
+                            <li class="list-group-item bg-black text-white border-secondary d-flex justify-content-between align-items-center">
+                                @list.Name
+                                <form asp-controller="Watchlist" asp-action="Toggle" method="post" class="m-0">
+                                    <input type="hidden" name="tmdbId" value="@Model.Id" />
+                                    <input type="hidden" name="title" value="@Model.Title" />
+                                    <input type="hidden" name="posterPath" value="@Model.PosterPath" />
+                                    <input type="hidden" name="categoryId" value="@list.Id" />
+                                    
+                                    @if (isInList)
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="width: 75px;">Remove</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-success" style="width: 75px;">Add</button>
+                                    }
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted mb-4 text-center">No lists created yet.</p>
+                }
+
+                <!-- Create New List Form -->
+                <form asp-controller="Watchlist" asp-action="CreateCategoryFromDetails" method="post" class="d-flex gap-2">
+                    <input type="hidden" name="returnTmdbId" value="@Model.Id" />
+                    <input type="text" name="categoryName" class="form-control bg-black text-white border-secondary" placeholder="New list name..." required />
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

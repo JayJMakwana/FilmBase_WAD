@@ -1,32 +1,53 @@
-﻿// Controllers/MoviesController.cs
-using FilmBase.Models.ViewModels;
+﻿using Microsoft.AspNetCore.Mvc;
 using FilmBase.Services;
-using Microsoft.AspNetCore.Mvc;
+using FilmBase.Repositories;
+using FilmBase.Models; // Required for HomePageViewModel
 
 namespace FilmBase.Controllers
 {
     public class MoviesController : Controller
     {
-        private readonly IMovieApiService _movieApi;
+        private readonly IMovieApiService _movieService;
+        private readonly IWatchlistRepository _watchlistRepository;
 
-        public MoviesController(IMovieApiService movieApi)
+        public MoviesController(IMovieApiService movieService, IWatchlistRepository watchlistRepository)
         {
-            _movieApi = movieApi;
+            _movieService = movieService;
+            _watchlistRepository = watchlistRepository;
         }
 
-        public async Task<IActionResult> Index(string searchQuery = "")
+        // 1. HOME PAGE: Loads the horizontal rows
+        public async Task<IActionResult> Index()
         {
-            var movies = await _movieApi.SearchMoviesAsync(searchQuery);
+            var viewModel = new HomePageViewModel
+            {
+                TrendingMovies = await _movieService.GetTrendingMoviesAsync(),
+                TopRatedMovies = await _movieService.GetTopRatedMoviesAsync()
+            };
+
+            return View(viewModel);
+        }
+
+        // 2. SEARCH PAGE: Handles queries from the search bar
+        public async Task<IActionResult> Search(string query)
+        {
+            if (string.IsNullOrEmpty(query))
+            {
+                return View(new List<FilmBase.Models.DTOs.TmdbMovieDto>());
+            }
+
+            var movies = await _movieService.SearchMoviesAsync(query);
             return View(movies);
         }
 
-        public async Task<IActionResult> Details(string id) 
+        // 3. DETAILS PAGE: Shows plot and watchlist dropdown
+        public async Task<IActionResult> Details(int id)
         {
-            var movie = await _movieApi.GetMovieByIdAsync(id);
+            var movieDetails = await _movieService.GetMovieDetailsAsync(id);
 
-            if (movie == null) return NotFound();
+            ViewBag.UserLists = await _watchlistRepository.GetAllCategoriesWithItemsAsync();
 
-            return View(movie);
+            return View(movieDetails);
         }
     }
 }

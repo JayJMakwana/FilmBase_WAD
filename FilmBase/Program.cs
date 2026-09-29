@@ -10,10 +10,10 @@ builder.Services.AddControllersWithViews();
 
 // 1. Register the SQLite Database Context
 builder.Services.AddDbContext<FilmBaseContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite("Data Source=filmbase_v2.db"));
 
 // 2. Register the OMDb API Service with HttpClient
-builder.Services.AddHttpClient<IMovieApiService, OmdbService>();
+builder.Services.AddHttpClient<IMovieApiService, TmdbService>();
 
 // 3. Register the Watchlist Repository
 builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();

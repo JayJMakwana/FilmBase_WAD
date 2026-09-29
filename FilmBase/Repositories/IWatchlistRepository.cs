@@ -1,11 +1,11 @@
-﻿// Repositories/IWatchlistRepository.cs
-using FilmBase.Models;
+﻿using FilmBase.Models;
 
 namespace FilmBase.Repositories
 {
     public interface IWatchlistRepository
     {
         Task<IEnumerable<Category>> GetAllCategoriesWithItemsAsync();
-        Task AddToWatchlistAsync(WatchlistItem item);
+        Task<IEnumerable<Category>> GetAllCategoriesAsync();
+        Task AddToWatchlistFromTmdbAsync(int tmdbId, string title, string posterPath, int categoryId);
     }
 }

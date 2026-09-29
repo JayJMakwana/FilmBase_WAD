@@ -1,0 +1,64 @@
+﻿@model FilmBase.Models.HomePageViewModel
+
+@{
+    ViewData["Title"] = "Discover Movies";
+}
+
+<!-- Custom CSS for hiding the scrollbar for a cleaner look -->
+<style>
+    .scroll-row::-webkit-scrollbar {
+        display: none;
+    }
+    .scroll-row {
+        -ms-overflow-style: none; 
+        scrollbar-width: none; 
+    }
+    .movie-card {
+        min-width: 180px;
+        max-width: 180px;
+        transition: transform 0.2s;
+    }
+    .movie-card:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="container mt-4">
+    <!-- Trending Section -->
+    <h4 class="mb-3 text-white">Trending This Week</h4>
+    <div class="d-flex flex-nowrap overflow-x-auto gap-3 pb-4 scroll-row">
+        @foreach (var movie in Model.TrendingMovies)
+        {
+            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="text-decoration-none">
+                <div class="card bg-dark text-white border-secondary movie-card h-100">
+                    @if (!string.IsNullOrEmpty(movie.PosterPath))
+                    {
+                        <img src="https://image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top" alt="@movie.Title">
+                    }
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-truncate mb-0" style="font-size: 0.9rem;">@movie.Title</h6>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+
+    <!-- Top Rated Section -->
+    <h4 class="mb-3 text-white mt-2">Top Rated</h4>
+    <div class="d-flex flex-nowrap overflow-x-auto gap-3 pb-4 scroll-row">
+        @foreach (var movie in Model.TopRatedMovies)
+        {
+            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="text-decoration-none">
+                <div class="card bg-dark text-white border-secondary movie-card h-100">
+                    @if (!string.IsNullOrEmpty(movie.PosterPath))
+                    {
+                        <img src="https://image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top" alt="@movie.Title">
+                    }
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-truncate mb-0" style="font-size: 0.9rem;">@movie.Title</h6>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+</div>

@@ -1,0 +1,49 @@
+﻿@model IEnumerable<FilmBase.Models.Category>
+
+@{
+    ViewData["Title"] = "My Watchlist";
+}
+
+<div class="container mt-4 text-white">
+    <h2 class="mb-4 fw-bold">My Watchlist</h2>
+
+    @if (Model != null && Model.Any())
+    {
+        foreach (var category in Model)
+        {
+            <div class="mb-5">
+                <h4 class="mb-3 border-bottom border-secondary pb-2">@category.Name</h4>
+                
+                @if (category.WatchlistItems != null && category.WatchlistItems.Any())
+                {
+                    <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
+                        @foreach (var item in category.WatchlistItems)
+                        {
+                            <div class="col">
+                                <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.TmdbId" class="text-decoration-none">
+                                    <div class="card bg-dark text-white border-secondary h-100 movie-card shadow-sm">
+                                        @if (!string.IsNullOrEmpty(item.PosterPath))
+                                        {
+                                            <img src="https://image.tmdb.org/t/p/w500@(item.PosterPath)" class="card-img-top" alt="@item.Title">
+                                        }
+                                        <div class="card-body p-2 bg-black">
+                                            <h6 class="card-title text-truncate mb-0" style="font-size: 0.85rem;">@item.Title</h6>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small">No movies in this list yet.</p>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">You haven't created any lists yet. Search for a movie to get started!</p>
+    }
+</div>
