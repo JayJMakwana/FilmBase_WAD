@@ -23,14 +23,14 @@ namespace FilmBase.Services
             _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<TmdbMovieDto>> SearchMoviesAsync(string query)
+        public async Task<IEnumerable<TmdbMovieDto>> SearchMoviesAsync(string query, int page = 1)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return new List<TmdbMovieDto>();
 
-            // 2. Call your Cloudflare worker
-            var response = await _httpClient.GetAsync($"{_workerUrl}/search/movie?query={Uri.EscapeDataString(query)}");
-
+            // Append the page parameter
+            var response = await _httpClient.GetAsync($"{_workerUrl}/search/movie?query={Uri.EscapeDataString(query)}&page={page}");
+            
             response.EnsureSuccessStatusCode();
 
             var jsonString = await response.Content.ReadAsStringAsync();
@@ -41,6 +41,7 @@ namespace FilmBase.Services
 
             return data?.Results ?? new List<TmdbMovieDto>();
         }
+
         public async Task<IEnumerable<TmdbMovieDto>> GetTrendingMoviesAsync()
         {
             var response = await _httpClient.GetAsync($"{_workerUrl}/trending/movie/week");
@@ -49,6 +50,7 @@ namespace FilmBase.Services
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return data?.Results ?? new List<TmdbMovieDto>();
         }
+
         public async Task<IEnumerable<TmdbMovieDto>> GetTopRatedMoviesAsync()
         {
             var response = await _httpClient.GetAsync($"{_workerUrl}/movie/top_rated");
@@ -57,6 +59,7 @@ namespace FilmBase.Services
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return data?.Results ?? new List<TmdbMovieDto>();
         }
+
         public async Task<TmdbMovieDto> GetMovieDetailsAsync(int id)
         {
             var response = await _httpClient.GetAsync($"{_workerUrl}/movie/{id}?append_to_response=credits");
@@ -64,10 +67,29 @@ namespace FilmBase.Services
 
             var jsonString = await response.Content.ReadAsStringAsync();
 
-            // Notice we deserialize directly into the DTO here, not the SearchResponse wrapper, 
-            // because TMDB returns a single object for movie details, not an array.
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             return JsonSerializer.Deserialize<TmdbMovieDto>(jsonString, options) ?? new TmdbMovieDto();
+        }
+
+        public async Task<IEnumerable<TmdbMovieDto>> DiscoverMoviesAsync(string filterType, string filterValue, int page = 1)
+        {
+            string endpoint = $"/discover/movie?page={page}&";
+
+            if (filterType == "year")
+                endpoint += $"primary_release_year={filterValue}";
+            endpoint += $"primary_release_year={filterValue}";
+            else if (filterType == "language")
+                endpoint += $"with_original_language={filterValue}";
+            else if (filterType == "genre")
+                endpoint += $"with_genres={filterValue}";
+
+            var response = await _httpClient.GetAsync($"{_workerUrl}{endpoint}");
+            response.EnsureSuccessStatusCode();
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return data?.Results ?? new List<TmdbMovieDto>();
         }
     }
 }

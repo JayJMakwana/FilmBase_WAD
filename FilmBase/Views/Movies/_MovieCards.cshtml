@@ -1,0 +1,31 @@
+﻿@model IEnumerable<FilmBase.Models.DTOs.TmdbMovieDto>
+
+@if (Model != null && Model.Any())
+{
+    foreach (var movie in Model)
+    {
+        <div class="col">
+            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="text-decoration-none">
+                <div class="card bg-dark text-white border-secondary h-100 shadow-sm transition-hover">
+                    @if (!string.IsNullOrEmpty(movie.PosterPath))
+                    {
+                        <img src="https://image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top" alt="@movie.Title">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 250px;">
+                            <span class="text-light opacity-50 small">No Image</span>
+                        </div>
+                    }
+                    <div class="card-body p-2 bg-black">
+                        <h6 class="card-title text-truncate mb-1" style="font-size: 0.9rem;">@movie.Title</h6>
+                        @if (!string.IsNullOrEmpty(movie.ReleaseDate))
+                        {
+                            <small class="text-muted" style="font-size: 0.75rem;">@movie.ReleaseDate.Substring(0, 4)</small>
+                        }
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+}

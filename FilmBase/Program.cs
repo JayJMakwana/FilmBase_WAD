@@ -39,5 +39,11 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Movies}/{action=Index}/{id?}");
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<FilmBase.Data.FilmBaseContext>();
+    dbContext.Database.EnsureCreated();
+}
 
+app.Run();
 app.Run();

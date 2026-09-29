@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using FilmBase.Services;
 using FilmBase.Repositories;
-using FilmBase.Models; // Required for HomePageViewModel
+using FilmBase.Models;
 
 namespace FilmBase.Controllers
 {
@@ -48,6 +48,33 @@ namespace FilmBase.Controllers
             ViewBag.UserLists = await _watchlistRepository.GetAllCategoriesWithItemsAsync();
 
             return View(movieDetails);
+        }
+        public async Task<IActionResult> Discover(string query, string filterType, string filterValue, string filterName, int page = 1, bool ajax = false)
+        {
+            ViewData["CurrentQuery"] = query;
+            ViewData["FilterName"] = filterName;
+            ViewData["FilterType"] = filterType;
+            ViewData["FilterValue"] = filterValue;
+
+            IEnumerable<FilmBase.Models.DTOs.TmdbMovieDto> movies = new List<FilmBase.Models.DTOs.TmdbMovieDto>();
+
+            if (!string.IsNullOrEmpty(query))
+            {
+                movies = await _movieService.SearchMoviesAsync(query, page);
+            }
+            else if (!string.IsNullOrEmpty(filterType) && !string.IsNullOrEmpty(filterValue))
+            {
+                movies = await _movieService.DiscoverMoviesAsync(filterType, filterValue, page);
+            }
+
+            // If JavaScript is asking for more results, ONLY return the raw HTML for the cards
+            if (ajax)
+            {
+                return PartialView("_MovieCards", movies);
+            }
+
+            // Otherwise, return the full page
+            return View(movies);
         }
     }
 }

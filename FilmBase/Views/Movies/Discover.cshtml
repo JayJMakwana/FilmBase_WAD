@@ -1,0 +1,279 @@
+﻿@model IEnumerable<FilmBase.Models.DTOs.TmdbMovieDto>
+
+@{
+    ViewData["Title"] = "Discover";
+    var currentQuery = ViewData["CurrentQuery"] as string;
+    var filterName = ViewData["FilterName"] as string;
+
+    // Determine the header text based on what the user searched or clicked
+    string displayTitle = !string.IsNullOrEmpty(currentQuery) ? $"Search Results for '{currentQuery}'" :
+                          !string.IsNullOrEmpty(filterName) ? $"Results for {filterName}" : "";
+}
+
+<div class="container mt-4 text-white">
+    <!-- Large Search Bar -->
+    <form method="get" asp-controller="Movies" asp-action="Discover" class="mb-5">
+        <div class="input-group input-group-lg shadow-sm">
+            <span class="input-group-text bg-dark border-secondary text-light">🔍</span>
+            <input type="text" name="query" value="@currentQuery" class="form-control bg-black text-white border-secondary" placeholder="Search titles, actors, or genres..." autofocus>
+            <button class="btn btn-primary px-4 fw-bold" type="submit">Search</button>
+        </div>
+    </form>
+
+    @if (string.IsNullOrEmpty(currentQuery) && string.IsNullOrEmpty(filterName))
+    {
+        <!-- Flutter-Style Discover Categories -->
+        <div class="mb-5">
+            <h5 class="fw-bold text-light opacity-75 mb-3">Browse by Language</h5>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a asp-action="Discover" asp-route-filterType="language" asp-route-filterValue="en" asp-route-filterName="English" class="btn btn-outline-secondary rounded-pill px-4 text-white">English</a>
+                <a asp-action="Discover" asp-route-filterType="language" asp-route-filterValue="hi" asp-route-filterName="Hindi" class="btn btn-outline-secondary rounded-pill px-4 text-white">Hindi</a>
+                <a asp-action="Discover" asp-route-filterType="language" asp-route-filterValue="es" asp-route-filterName="Spanish" class="btn btn-outline-secondary rounded-pill px-4 text-white">Spanish</a>
+                <a asp-action="Discover" asp-route-filterType="language" asp-route-filterValue="ja" asp-route-filterName="Japanese" class="btn btn-outline-secondary rounded-pill px-4 text-white">Japanese</a>
+                <a asp-action="Discover" asp-route-filterType="language" asp-route-filterValue="ko" asp-route-filterName="Korean" class="btn btn-outline-secondary rounded-pill px-4 text-white">Korean</a>
+                
+                <!-- See More Button -->
+                <button type="button" class="btn btn-outline-primary rounded-pill px-4 text-white fw-bold" data-bs-toggle="modal" data-bs-target="#customFilterModal" data-filter-type="language" data-modal-title="More Languages">+ See More</button>
+            </div>
+
+            <h5 class="fw-bold text-light opacity-75 mb-3">Browse by Year</h5>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a asp-action="Discover" asp-route-filterType="year" asp-route-filterValue="2024" asp-route-filterName="2024" class="btn btn-outline-secondary rounded-pill px-4 text-white">2024</a>
+                <a asp-action="Discover" asp-route-filterType="year" asp-route-filterValue="2023" asp-route-filterName="2023" class="btn btn-outline-secondary rounded-pill px-4 text-white">2023</a>
+                <a asp-action="Discover" asp-route-filterType="year" asp-route-filterValue="2022" asp-route-filterName="2022" class="btn btn-outline-secondary rounded-pill px-4 text-white">2022</a>
+                <a asp-action="Discover" asp-route-filterType="year" asp-route-filterValue="2021" asp-route-filterName="2021" class="btn btn-outline-secondary rounded-pill px-4 text-white">2021</a>
+                <a asp-action="Discover" asp-route-filterType="year" asp-route-filterValue="2020" asp-route-filterName="2020" class="btn btn-outline-secondary rounded-pill px-4 text-white">2020</a>
+                
+                <!-- See More Button -->
+                <button type="button" class="btn btn-outline-primary rounded-pill px-4 text-white fw-bold" data-bs-toggle="modal" data-bs-target="#customFilterModal" data-filter-type="year" data-modal-title="Specific Year">+ See More</button>
+            </div>
+
+            <h5 class="fw-bold text-light opacity-75 mb-3">Browse by Genre</h5>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="Discover" asp-route-filterType="genre" asp-route-filterValue="28" asp-route-filterName="Action" class="btn btn-outline-secondary rounded-pill px-4 text-white">Action</a>
+                <a asp-action="Discover" asp-route-filterType="genre" asp-route-filterValue="35" asp-route-filterName="Comedy" class="btn btn-outline-secondary rounded-pill px-4 text-white">Comedy</a>
+                <a asp-action="Discover" asp-route-filterType="genre" asp-route-filterValue="18" asp-route-filterName="Drama" class="btn btn-outline-secondary rounded-pill px-4 text-white">Drama</a>
+                <a asp-action="Discover" asp-route-filterType="genre" asp-route-filterValue="27" asp-route-filterName="Horror" class="btn btn-outline-secondary rounded-pill px-4 text-white">Horror</a>
+                <a asp-action="Discover" asp-route-filterType="genre" asp-route-filterValue="878" asp-route-filterName="Sci-Fi" class="btn btn-outline-secondary rounded-pill px-4 text-white">Sci-Fi</a>
+                
+                <!-- See More Button -->
+                <button type="button" class="btn btn-outline-primary rounded-pill px-4 text-white fw-bold" data-bs-toggle="modal" data-bs-target="#customFilterModal" data-filter-type="genre" data-modal-title="More Genres">+ See More</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Results Header -->
+        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-4">
+            <h4 class="fw-bold mb-0">@displayTitle</h4>
+            <a asp-action="Discover" class="btn btn-sm btn-outline-light">Clear Search</a>
+        </div>
+
+        <!-- Results Grid (Uses Partial View for Infinite Scroll) -->
+        <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4 mb-4" id="movie-grid">
+            @if (Model != null && Model.Any())
+            {
+                <partial name="_MovieCards" model="Model" />
+            }
+            else
+            {
+                <div class="col-12" id="no-results-msg">
+                    <p class="text-muted text-center mt-5 fs-5">No movies found. Try another search.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Invisible trigger for infinite scroll -->
+        @if (Model != null && Model.Any())
+        {
+            <div id="scroll-trigger" class="text-center py-4 mb-5">
+                <div class="spinner-border text-primary d-none" id="loading-spinner" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<!-- Custom Filter Modal -->
+<div class="modal fade" id="customFilterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+            <form method="get" asp-controller="Movies" asp-action="Discover" onsubmit="setModalValues()">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold" id="customFilterModalLabel">Search More</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="filterType" id="modalFilterType" />
+                    <input type="hidden" name="filterName" id="modalFilterName" />
+                    <input type="hidden" name="filterValue" id="modalFilterValue" />
+
+                    <!-- Language Selection -->
+                    <div id="languageInputGroup" class="d-none">
+                        <label class="form-label text-light opacity-75">Select Language</label>
+                        <select class="form-select bg-black text-white border-secondary" id="languageSelect">
+                            <option value="gu">Gujarati</option>
+                            <option value="ta">Tamil</option>
+                            <option value="te">Telugu</option>
+                            <option value="ml">Malayalam</option>
+                            <option value="mr">Marathi</option>
+                            <option value="bn">Bengali</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="it">Italian</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Selection -->
+                    <div id="yearInputGroup" class="d-none">
+                        <label class="form-label text-light opacity-75">Enter Year</label>
+                        <input type="number" class="form-control bg-black text-white border-secondary" id="yearSelect" min="1900" max="2030" placeholder="e.g. 2010" />
+                    </div>
+
+                    <!-- Genre Selection -->
+                    <div id="genreInputGroup" class="d-none">
+                        <label class="form-label text-light opacity-75">Select Genre</label>
+                        <select class="form-select bg-black text-white border-secondary" id="genreSelect">
+                            <option value="16">Animation</option>
+                            <option value="12">Adventure</option>
+                            <option value="80">Crime</option>
+                            <option value="99">Documentary</option>
+                            <option value="10751">Family</option>
+                            <option value="14">Fantasy</option>
+                            <option value="36">History</option>
+                            <option value="10402">Music</option>
+                            <option value="9648">Mystery</option>
+                            <option value="10749">Romance</option>
+                            <option value="53">Thriller</option>
+                            <option value="37">Western</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-hover {
+        transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }
+
+    .transition-hover:hover {
+        transform: scale(1.05);
+        border-color: #0d6efd !important;
+        z-index: 10;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = true;
+
+        // Grab the active filters from Razor
+        const currentQuery = '@Html.Raw(currentQuery ?? "")';
+        const filterType = '@Html.Raw(ViewData["FilterType"] ?? "")';
+        const filterValue = '@Html.Raw(ViewData["FilterValue"] ?? "")';
+        const filterName = '@Html.Raw(ViewData["FilterName"] ?? "")';
+
+        const spinner = document.getElementById("loading-spinner");
+        const grid = document.getElementById("movie-grid");
+        const trigger = document.getElementById("scroll-trigger");
+
+        // Modal Configuration Logic
+        const customFilterModal = document.getElementById('customFilterModal');
+        if (customFilterModal) {
+            customFilterModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                const modalFilterType = button.getAttribute('data-filter-type');
+                const modalTitle = button.getAttribute('data-modal-title');
+                
+                // Set title and hidden type
+                document.getElementById('customFilterModalLabel').textContent = modalTitle;
+                document.getElementById('modalFilterType').value = modalFilterType;
+
+                // Hide all inputs first
+                document.getElementById('languageInputGroup').classList.add('d-none');
+                document.getElementById('yearInputGroup').classList.add('d-none');
+                document.getElementById('genreInputGroup').classList.add('d-none');
+
+                // Show the correct one
+                if (modalFilterType === 'language') {
+                    document.getElementById('languageInputGroup').classList.remove('d-none');
+                } else if (modalFilterType === 'year') {
+                    document.getElementById('yearInputGroup').classList.remove('d-none');
+                    document.getElementById('yearSelect').value = ''; 
+                } else if (modalFilterType === 'genre') {
+                    document.getElementById('genreInputGroup').classList.remove('d-none');
+                }
+            });
+        }
+
+        // Infinite Scroll Logic
+        if (!currentQuery && !filterType) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading && hasMore) {
+                loadMoreMovies();
+            }
+        }, { rootMargin: "200px" });
+
+        if (trigger) observer.observe(trigger);
+
+        async function loadMoreMovies() {
+            isLoading = true;
+            spinner.classList.remove("d-none");
+            currentPage++;
+
+            const params = new URLSearchParams({ ajax: 'true', page: currentPage });
+            if (currentQuery) params.append('query', currentQuery);
+            if (filterType) params.append('filterType', filterType);
+            if (filterValue) params.append('filterValue', filterValue);
+            if (filterName) params.append('filterName', filterName);
+
+            try {
+                const response = await fetch(`/Movies/Discover?${params.toString()}`);
+                const html = await response.text();
+
+                if (html.trim().length === 0) {
+                    hasMore = false;
+                    if (trigger) trigger.style.display = 'none';
+                } else {
+                    grid.insertAdjacentHTML("beforeend", html);
+                }
+            } catch (error) {
+                console.error("Failed to fetch more movies");
+            } finally {
+                isLoading = false;
+                spinner.classList.add("d-none");
+            }
+        }
+    });
+
+    // Capture the value right before the form submits to the controller
+    function setModalValues() {
+        const type = document.getElementById('modalFilterType').value;
+        const nameInput = document.getElementById('modalFilterName');
+        const valInput = document.getElementById('modalFilterValue');
+
+        if (type === 'language') {
+            const sel = document.getElementById('languageSelect');
+            valInput.value = sel.value;
+            nameInput.value = sel.options[sel.selectedIndex].text;
+        } else if (type === 'year') {
+            const sel = document.getElementById('yearSelect');
+            valInput.value = sel.value;
+            nameInput.value = sel.value;
+        } else if (type === 'genre') {
+            const sel = document.getElementById('genreSelect');
+            valInput.value = sel.value;
+            nameInput.value = sel.options[sel.selectedIndex].text;
+        }
+    }
+</script>
