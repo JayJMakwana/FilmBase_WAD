@@ -22,7 +22,11 @@ namespace FilmBase.Controllers
             var viewModel = new HomePageViewModel
             {
                 TrendingMovies = await _movieService.GetTrendingMoviesAsync(),
-                TopRatedMovies = await _movieService.GetTopRatedMoviesAsync()
+                TopRatedMovies = await _movieService.GetTopRatedMoviesAsync(),
+                NewReleasedMovies = await _movieService.GetNewReleasedMoviesAsync(),
+                OscarsWinningMovies = await _movieService.GetOscarsWinningMoviesAsync(),
+                EnglishMovies = await _movieService.GetEnglishMoviesAsync(),
+                HindiMovies = await _movieService.GetHindiMoviesAsync()
             };
 
             return View(viewModel);
@@ -74,6 +78,48 @@ namespace FilmBase.Controllers
             }
 
             // Otherwise, return the full page
+            return View(movies);
+        }
+        public async Task<IActionResult> Browse(string category, int page = 1, bool ajax = false)
+        {
+            IEnumerable<FilmBase.Models.DTOs.TmdbMovieDto> movies = new List<FilmBase.Models.DTOs.TmdbMovieDto>();
+            string viewTitle = "Browse Collection";
+
+            switch (category?.ToLower())
+            {
+                case "newreleases":
+                    movies = await _movieService.GetNewReleasedMoviesAsync(page);
+                    viewTitle = "New Releases";
+                    break;
+                case "trending":
+                    movies = await _movieService.GetTrendingMoviesAsync(page);
+                    viewTitle = "Trending This Week";
+                    break;
+                case "toprated":
+                    movies = await _movieService.GetTopRatedMoviesAsync(page);
+                    viewTitle = "Top Rated of All Time";
+                    break;
+                case "oscars":
+                    movies = await _movieService.GetOscarsWinningMoviesAsync(page);
+                    viewTitle = "Critically Acclaimed";
+                    break;
+                case "hindi":
+                    movies = await _movieService.GetHindiMoviesAsync(page);
+                    viewTitle = "Popular Hindi Movies";
+                    break;
+                case "english":
+                    movies = await _movieService.GetEnglishMoviesAsync(page);
+                    viewTitle = "Popular English Movies";
+                    break;
+            }
+
+            if (ajax)
+            {
+                return PartialView("_MovieCards", movies);
+            }
+
+            ViewData["CategorySlug"] = category;
+            ViewData["CategoryTitle"] = viewTitle;
             return View(movies);
         }
     }

@@ -1,64 +1,81 @@
 ﻿@model FilmBase.Models.HomePageViewModel
 
 @{
-    ViewData["Title"] = "Discover Movies";
+    ViewData["Title"] = "Home";
+    
+    // Group the titles, category IDs, and lists together
+    var movieRows = new List<(string Title, string Id, IEnumerable<FilmBase.Models.DTOs.TmdbMovieDto> Movies)>
+    {
+        ("New Releases", "newreleases", Model.NewReleasedMovies),
+        ("Trending This Week", "trending", Model.TrendingMovies),
+        ("Top Rated of All Time", "toprated", Model.TopRatedMovies),
+        ("Critically Acclaimed (10k+ Votes)", "oscars", Model.OscarsWinningMovies),
+        ("Popular Hindi Movies", "hindi", Model.HindiMovies),
+        ("Popular English Movies", "english", Model.EnglishMovies)
+    };
 }
 
-<!-- Custom CSS for hiding the scrollbar for a cleaner look -->
-<style>
-    .scroll-row::-webkit-scrollbar {
-        display: none;
-    }
-    .scroll-row {
-        -ms-overflow-style: none; 
-        scrollbar-width: none; 
-    }
-    .movie-card {
-        min-width: 180px;
-        max-width: 180px;
-        transition: transform 0.2s;
-    }
-    .movie-card:hover {
-        transform: scale(1.05);
-    }
-</style>
-
-<div class="container mt-4">
-    <!-- Trending Section -->
-    <h4 class="mb-3 text-white">Trending This Week</h4>
-    <div class="d-flex flex-nowrap overflow-x-auto gap-3 pb-4 scroll-row">
-        @foreach (var movie in Model.TrendingMovies)
-        {
-            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="text-decoration-none">
-                <div class="card bg-dark text-white border-secondary movie-card h-100">
-                    @if (!string.IsNullOrEmpty(movie.PosterPath))
-                    {
-                        <img src="https://image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top" alt="@movie.Title">
-                    }
-                    <div class="card-body p-2">
-                        <h6 class="card-title text-truncate mb-0" style="font-size: 0.9rem;">@movie.Title</h6>
-                    </div>
-                </div>
-            </a>
-        }
-    </div>
-
-    <!-- Top Rated Section -->
-    <h4 class="mb-3 text-white mt-2">Top Rated</h4>
-    <div class="d-flex flex-nowrap overflow-x-auto gap-3 pb-4 scroll-row">
-        @foreach (var movie in Model.TopRatedMovies)
-        {
-            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="text-decoration-none">
-                <div class="card bg-dark text-white border-secondary movie-card h-100">
-                    @if (!string.IsNullOrEmpty(movie.PosterPath))
-                    {
-                        <img src="https://image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top" alt="@movie.Title">
-                    }
-                    <div class="card-body p-2">
-                        <h6 class="card-title text-truncate mb-0" style="font-size: 0.9rem;">@movie.Title</h6>
-                    </div>
-                </div>
-            </a>
-        }
+<!-- Hero Banner -->
+<div class="mb-5 position-relative rounded shadow-lg" style="height: 400px; background: linear-gradient(to right, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.2)), url('https://image.tmdb.org/t/p/original/b33nnKl1GSFbao4l3fZDDqsTc0F.jpg') center/cover;">
+    <div class="position-absolute bottom-0 start-0 p-5 w-50">
+        <h1 class="text-white fw-bold display-4">Welcome to FilmBase</h1>
+        <p class="text-light fs-5 opacity-75">Track, discover, and save your favorite movies in one place.</p>
     </div>
 </div>
+
+<div class="container-fluid text-white pb-5">
+    
+    @foreach (var row in movieRows)
+    {
+        if (row.Movies != null && row.Movies.Any())
+        {
+            <div class="mb-5">
+                <h4 class="fw-bold mb-3 ms-2">@row.Title</h4>
+                <div class="d-flex overflow-auto gap-3 pb-3 px-2 movie-scroll-container">
+                    
+                    <!-- Loop through the actual movies -->
+                    @foreach (var movie in row.Movies)
+                    {
+                        <div class="flex-shrink-0" style="width: 160px;">
+                            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="text-decoration-none">
+                                <div class="card bg-dark text-white border-secondary h-100 shadow-sm transition-hover">
+                                    @if (!string.IsNullOrEmpty(movie.PosterPath))
+                                    {
+                                        <img src="https://image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top rounded" alt="@movie.Title">
+                                    }
+                                    else
+                                    {
+                                        <div class="card-img-top bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 240px;">
+                                            <span class="text-light opacity-50 small">No Image</span>
+                                        </div>
+                                    }
+                                </div>
+                            </a>
+                        </div>
+                    }
+
+                    <!-- The "See More" Card placed at the absolute end of the row -->
+                    <div class="flex-shrink-0" style="width: 160px;">
+                        <a asp-controller="Movies" asp-action="Browse" asp-route-category="@row.Id" class="text-decoration-none">
+                            <div class="card bg-dark text-white border-secondary h-100 shadow-sm transition-hover d-flex align-items-center justify-content-center" style="min-height: 240px;">
+                                <div class="text-center text-primary">
+                                    <h2 class="mb-1 fw-bold">➔</h2>
+                                    <small class="fw-bold d-block text-light">See More</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+<style>
+    .movie-scroll-container::-webkit-scrollbar { display: none; }
+    .movie-scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
+    .transition-hover { transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out; }
+    .transition-hover:hover { transform: scale(1.05); border-color: #0d6efd !important; z-index: 10; }
+</style>
