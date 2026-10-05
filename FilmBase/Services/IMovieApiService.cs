@@ -14,5 +14,10 @@ namespace FilmBase.Services
         Task<IEnumerable<TmdbMovieDto>> GetOscarsWinningMoviesAsync(int page = 1);
         Task<IEnumerable<TmdbMovieDto>> GetEnglishMoviesAsync(int page = 1);
         Task<IEnumerable<TmdbMovieDto>> GetHindiMoviesAsync(int page = 1);
+        Task<IEnumerable<TmdbMovieDto>> GetAnimationMoviesAsync(int page = 1);
+        Task<IEnumerable<TmdbMovieDto>> GetHorrorMoviesAsync(int page = 1);
+        Task<IEnumerable<TmdbMovieDto>> GetSciFiMoviesAsync(int page = 1);
+        Task<IEnumerable<TmdbMovieDto>> GetGujaratiMoviesAsync(int page = 1);
+        Task<IEnumerable<TmdbMovieDto>> GetSouthIndianMoviesAsync(int page = 1);
     }
 }

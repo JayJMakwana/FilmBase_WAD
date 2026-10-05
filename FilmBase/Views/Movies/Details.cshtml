@@ -10,7 +10,7 @@
         <div class="col-md-4 mb-4">
             @if (!string.IsNullOrEmpty(Model.PosterPath))
             {
-                <img src="https://image.tmdb.org/t/p/w500@(Model.PosterPath)" class="img-fluid rounded shadow-lg w-100" alt="@Model.Title">
+                <img src="https://wsrv.nl/?url=image.tmdb.org/t/p/w500@(Model.PosterPath)" class="img-fluid rounded shadow-lg" alt="@Model.Title">
             }
         </div>
 
@@ -25,7 +25,7 @@
                 }
                 @if (Model.VoteAverage.HasValue)
                 {
-                    <span>&bull; ⭐ @Model.VoteAverage.Value.ToString("0.1")/10</span>
+                    <span>&bull; ⭐ @Model.VoteAverage.Value.ToString("0.1")/100</span>
                 }
             </p>
 
@@ -70,7 +70,7 @@
                     <ul class="list-group list-group-flush mb-4 rounded">
                         @foreach (var list in userLists)
                         {
-                            // Check if this exact movie is already saved in this specific list
+                            // Check if this exact movie is already saved in this specific list                            
                             bool isInList = list.WatchlistItems != null && list.WatchlistItems.Any(i => i.TmdbId == Model.Id);
                             
                             <li class="list-group-item bg-black text-white border-secondary d-flex justify-content-between align-items-center">

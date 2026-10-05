@@ -97,7 +97,7 @@
 
 <!-- Custom Filter Modal -->
 <div class="modal fade" id="customFilterModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content bg-dark text-white border-secondary shadow-lg">
             <form method="get" asp-controller="Movies" asp-action="Discover" onsubmit="setModalValues()">
                 <div class="modal-header border-secondary">
@@ -109,43 +109,62 @@
                     <input type="hidden" name="filterName" id="modalFilterName" />
                     <input type="hidden" name="filterValue" id="modalFilterValue" />
 
-                    <!-- Language Selection -->
+                    <!-- Expanded Language Selection -->
                     <div id="languageInputGroup" class="d-none">
                         <label class="form-label text-light opacity-75">Select Language</label>
                         <select class="form-select bg-black text-white border-secondary" id="languageSelect">
+                            <option value="en">English</option>
+                            <option value="hi">Hindi</option>
                             <option value="gu">Gujarati</option>
                             <option value="ta">Tamil</option>
                             <option value="te">Telugu</option>
                             <option value="ml">Malayalam</option>
                             <option value="mr">Marathi</option>
                             <option value="bn">Bengali</option>
+                            <option value="pa">Punjabi</option>
+                            <option value="es">Spanish</option>
                             <option value="fr">French</option>
+                            <option value="ja">Japanese</option>
+                            <option value="ko">Korean</option>
+                            <option value="zh">Mandarin / Chinese</option>
                             <option value="de">German</option>
                             <option value="it">Italian</option>
+                            <option value="ru">Russian</option>
                         </select>
                     </div>
 
                     <!-- Year Selection -->
                     <div id="yearInputGroup" class="d-none">
-                        <label class="form-label text-light opacity-75">Enter Year</label>
-                        <input type="number" class="form-control bg-black text-white border-secondary" id="yearSelect" min="1900" max="2030" placeholder="e.g. 2010" />
+                        <label class="form-label text-light opacity-75">Select Year</label>
+                        <select class="form-select bg-black text-white border-secondary mb-2" id="yearSelect">
+                            @for (int y = 2026; y >= 1990; y--)
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
                     </div>
 
-                    <!-- Genre Selection -->
+                    <!-- Expanded Genre Selection -->
                     <div id="genreInputGroup" class="d-none">
                         <label class="form-label text-light opacity-75">Select Genre</label>
                         <select class="form-select bg-black text-white border-secondary" id="genreSelect">
-                            <option value="16">Animation</option>
+                            <option value="28">Action</option>
                             <option value="12">Adventure</option>
+                            <option value="16">Animation</option>
+                            <option value="35">Comedy</option>
                             <option value="80">Crime</option>
                             <option value="99">Documentary</option>
+                            <option value="18">Drama</option>
                             <option value="10751">Family</option>
                             <option value="14">Fantasy</option>
                             <option value="36">History</option>
+                            <option value="27">Horror</option>
                             <option value="10402">Music</option>
                             <option value="9648">Mystery</option>
                             <option value="10749">Romance</option>
+                            <option value="878">Sci-Fi</option>
                             <option value="53">Thriller</option>
+                            <option value="10752">War</option>
                             <option value="37">Western</option>
                         </select>
                     </div>
@@ -208,7 +227,7 @@
                     document.getElementById('languageInputGroup').classList.remove('d-none');
                 } else if (modalFilterType === 'year') {
                     document.getElementById('yearInputGroup').classList.remove('d-none');
-                    document.getElementById('yearSelect').value = ''; 
+                    document.getElementById('yearSelect').value = '2024'; // Default starting point
                 } else if (modalFilterType === 'genre') {
                     document.getElementById('genreInputGroup').classList.remove('d-none');
                 }

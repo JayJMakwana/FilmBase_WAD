@@ -26,8 +26,13 @@ namespace FilmBase.Controllers
                 NewReleasedMovies = await _movieService.GetNewReleasedMoviesAsync(),
                 OscarsWinningMovies = await _movieService.GetOscarsWinningMoviesAsync(),
                 EnglishMovies = await _movieService.GetEnglishMoviesAsync(),
-                HindiMovies = await _movieService.GetHindiMoviesAsync()
+                HindiMovies = await _movieService.GetHindiMoviesAsync(),
+                AnimationMovies = await _movieService.GetAnimationMoviesAsync(),
+                HorrorMovies = await _movieService.GetHorrorMoviesAsync(),
+                SciFiMovies = await _movieService.GetSciFiMoviesAsync(),
+                GujaratiMovies = await _movieService.GetGujaratiMoviesAsync()
             };
+
 
             return View(viewModel);
         }
@@ -110,6 +115,22 @@ namespace FilmBase.Controllers
                 case "english":
                     movies = await _movieService.GetEnglishMoviesAsync(page);
                     viewTitle = "Popular English Movies";
+                    break;
+                case "animation":
+                    movies = await _movieService.GetAnimationMoviesAsync(page);
+                    viewTitle = "Animation Movies";
+                    break;
+                case "horror":
+                    movies = await _movieService.GetHorrorMoviesAsync(page);
+                    viewTitle = "Horror Movies";
+                    break;
+                case "scifi":
+                    movies = await _movieService.GetSciFiMoviesAsync(page);
+                    viewTitle = "Sci-Fi Movies";
+                    break;
+                case "gujarati":
+                    movies = await _movieService.GetGujaratiMoviesAsync(page);
+                    viewTitle = "Gujarati Cinema";
                     break;
             }
 

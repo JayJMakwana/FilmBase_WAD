@@ -9,14 +9,19 @@
         ("New Releases", "newreleases", Model.NewReleasedMovies),
         ("Trending This Week", "trending", Model.TrendingMovies),
         ("Top Rated of All Time", "toprated", Model.TopRatedMovies),
-        ("Critically Acclaimed (10k+ Votes)", "oscars", Model.OscarsWinningMovies),
+        ("Animation Favorites", "animation", Model.AnimationMovies),
         ("Popular Hindi Movies", "hindi", Model.HindiMovies),
+        ("Gujarati Cinema", "gujarati", Model.GujaratiMovies),
+        ("Sci-Fi Adventures", "scifi", Model.SciFiMovies),
+        ("Horror & Thrills", "horror", Model.HorrorMovies),
+        ("Critically Acclaimed (10k+ Votes)", "oscars", Model.OscarsWinningMovies),
         ("Popular English Movies", "english", Model.EnglishMovies)
     };
 }
 
+
 <!-- Hero Banner -->
-<div class="mb-5 position-relative rounded shadow-lg" style="height: 400px; background: linear-gradient(to right, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.2)), url('https://image.tmdb.org/t/p/original/b33nnKl1GSFbao4l3fZDDqsTc0F.jpg') center/cover;">
+<div class="mb-5 position-relative rounded shadow-lg" style="height: 400px;background: linear-gradient(to right, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.2)), url('https://wsrv.nl/?url=image.tmdb.org/t/p/original/b33nnKl1GSFbao4l3fZDDqsTc0F.jpg') center/cover;">
     <div class="position-absolute bottom-0 start-0 p-5 w-50">
         <h1 class="text-white fw-bold display-4">Welcome to FilmBase</h1>
         <p class="text-light fs-5 opacity-75">Track, discover, and save your favorite movies in one place.</p>
@@ -41,7 +46,7 @@
                                 <div class="card bg-dark text-white border-secondary h-100 shadow-sm transition-hover">
                                     @if (!string.IsNullOrEmpty(movie.PosterPath))
                                     {
-                                        <img src="https://image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top rounded" alt="@movie.Title">
+                                        <img src="https://wsrv.nl/?url=image.tmdb.org/t/p/w500@(movie.PosterPath)" class="card-img-top rounded" alt="@movie.Title">
                                     }
                                     else
                                     {
