@@ -48,5 +48,11 @@ namespace FilmBase.Models.DTOs
     {
         [JsonPropertyName("name")]
         public string? Name { get; set; }
+
+        [JsonPropertyName("character")]
+        public string? Character { get; set; }
+
+        [JsonPropertyName("profile_path")]
+        public string? ProfilePath { get; set; }
     }
 }

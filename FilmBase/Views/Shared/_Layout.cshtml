@@ -1,38 +1,113 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - FilmBase</title>
-    <!-- Assuming Bootstrap via CDN for quick styling -->
+    <!-- Tailwind CSS Engine via CDN (Enables instant modern UI in Razor without Node or TypeScript) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Bootstrap 5 for interactive modals -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background-color: #07090e !important;
+            color: #e2e8f0 !important;
+        }
+        h1, h2, h3, .font-display {
+            font-family: 'Cinzel', Georgia, serif;
+            letter-spacing: -0.01em;
+        }
+        .modal-backdrop.show {
+            opacity: 0.8;
+            backdrop-filter: blur(4px);
+        }
+    </style>
 </head>
-<body class="bg-dark text-light">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Movies" asp-action="Index">FilmBase</a>
-                <div class="collapse navbar-collapse">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Movies" asp-action="Discover">Discover</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Watchlist" asp-action="Index">My Watchlist</a>
-                        </li>
-                    </ul>
+<body class="bg-[#07090e] text-[#e2e8f0] min-h-screen flex flex-col antialiased selection:bg-indigo-600 selection:text-white">
+    <!-- Modern Header / Top Bar -->
+    <header class="sticky top-0 z-40 bg-[#07090e]/85 backdrop-blur-xl border-b border-white/[0.07]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Zone 1: Wordmark -->
+            <a asp-controller="Movies" asp-action="Index" class="flex items-center gap-2.5 text-decoration-none group">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                    <span class="text-white text-xs">🎬</span>
                 </div>
+                <span class="font-display tracking-widest text-lg font-bold bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent group-hover:text-indigo-400 transition-colors">
+                    FILMBASE
+                </span>
+            </a>
+
+            <!-- Zone 2: Navigation Links -->
+            <nav class="flex items-center gap-6 sm:gap-8 text-sm font-medium">
+                <a asp-controller="Movies" asp-action="Index" class="text-slate-300 hover:text-white transition-colors py-1 border-b-2 border-transparent hover:border-indigo-500 text-decoration-none">
+                    Home
+                </a>
+                <a asp-controller="Movies" asp-action="Discover" class="text-slate-300 hover:text-white transition-colors py-1 border-b-2 border-transparent hover:border-indigo-500 text-decoration-none">
+                    Discover
+                </a>
+                <a asp-controller="Watchlist" asp-action="Index" class="text-slate-300 hover:text-white transition-colors py-1 border-b-2 border-transparent hover:border-indigo-500 text-decoration-none">
+                    My Watchlist
+                </a>
+            </nav>
+
+            <!-- Zone 3: Quick Action -->
+            <div class="flex items-center gap-3">
+                <a asp-controller="Movies" asp-action="Discover" class="flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-slate-300 bg-white/[0.05] hover:bg-white/[0.09] hover:text-white border border-white/[0.08] rounded-lg transition-all text-decoration-none">
+                    <span>🔍</span>
+                    <span class="hidden sm:inline">Search movies...</span>
+                </a>
             </div>
-        </nav>
+        </div>
     </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <!-- Main Page Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        @RenderBody()
+    </main>
 
+    <!-- Modern Minimalist Footer -->
+    <footer class="border-t border-white/[0.06] bg-[#05070a] py-8 text-xs text-slate-500 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-display font-bold text-slate-300 tracking-wider">
+                    FILMBASE
+                </span>
+                <span>·</span>
+                <span>Track, discover, and save your favorite movies</span>
+            </div>
+
+            <div class="flex items-center gap-4 text-[11px]">
+                <span>Powered by TMDB data</span>
+                <span>·</span>
+                <span>© @DateTime.Now.Year FilmBase</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS for Modals -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

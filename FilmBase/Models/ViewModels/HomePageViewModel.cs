@@ -11,8 +11,8 @@ namespace FilmBase.Models
         public IEnumerable<TmdbMovieDto> EnglishMovies { get; set; } = new List<TmdbMovieDto>();
         public IEnumerable<TmdbMovieDto> HindiMovies { get; set; } = new List<TmdbMovieDto>();
         public IEnumerable<TmdbMovieDto> AnimationMovies { get; set; } = new List<TmdbMovieDto>();
-public IEnumerable<TmdbMovieDto> HorrorMovies { get; set; } = new List<TmdbMovieDto>();
-public IEnumerable<TmdbMovieDto> SciFiMovies { get; set; } = new List<TmdbMovieDto>();
-public IEnumerable<TmdbMovieDto> GujaratiMovies { get; set; } = new List<TmdbMovieDto>();
+        public IEnumerable<TmdbMovieDto> HorrorMovies { get; set; } = new List<TmdbMovieDto>();
+        public IEnumerable<TmdbMovieDto> SciFiMovies { get; set; } = new List<TmdbMovieDto>();
+        public IEnumerable<TmdbMovieDto> GujaratiMovies { get; set; } = new List<TmdbMovieDto>();
     }
 }

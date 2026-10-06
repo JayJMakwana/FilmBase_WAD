@@ -2,79 +2,190 @@
 @{
     ViewData["Title"] = Model.Title;
     var userLists = ViewBag.UserLists as IEnumerable<FilmBase.Models.Category>;
+    var year = !string.IsNullOrEmpty(Model.ReleaseDate) && Model.ReleaseDate.Length >= 4 ? Model.ReleaseDate.Substring(0, 4) : "Unknown Year";
+    var rating = Model.VoteAverage.HasValue && Model.VoteAverage > 0 ? Model.VoteAverage.Value.ToString("0.1") : null;
+    bool isInAnyList = userLists != null && userLists.Any(l => l.WatchlistItems != null && l.WatchlistItems.Any(i => i.TmdbId == Model.Id));
 }
 
-<div class="container mt-5 text-white">
-    <div class="row">
-        <!-- Left Side: Poster -->
-        <div class="col-md-4 mb-4">
-            @if (!string.IsNullOrEmpty(Model.PosterPath))
-            {
-                <img src="https://wsrv.nl/?url=image.tmdb.org/t/p/w500@(Model.PosterPath)" class="img-fluid rounded shadow-lg" alt="@Model.Title">
-            }
+<div class="relative pb-16">
+    <!-- Ambient Backdrop Image -->
+    @if (!string.IsNullOrEmpty(Model.BackdropPath))
+    {
+        <div class="absolute top-0 inset-x-0 h-96 overflow-hidden pointer-events-none opacity-25">
+            <img src="https://wsrv.nl/?url=image.tmdb.org/t/p/original@(Model.BackdropPath)" alt="" class="w-full h-full object-cover blur-2xl transform scale-110" />
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#07090e]/70 to-[#07090e]"></div>
+        </div>
+    }
+
+    <div class="relative pt-4">
+        <!-- Navigation Breadcrumb -->
+        <div class="mb-6">
+            <a asp-action="Index" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/10 text-xs font-medium transition-colors text-decoration-none">
+                <span>←</span>
+                <span>Back to Browse</span>
+            </a>
         </div>
 
-        <!-- Right Side: Details & Cast -->
-        <div class="col-md-8">
-            <h1 class="fw-bold mb-1">@Model.Title</h1>
-            <p class="text-light opacity-75 fs-5 mb-4">
-                @(string.IsNullOrEmpty(Model.ReleaseDate) ? "Unknown Year" : Model.ReleaseDate.Substring(0, 4)) 
-                @if (Model.Runtime.HasValue && Model.Runtime > 0)
-                {
-                    <span>&bull; @Model.Runtime min</span>
-                }
-                @if (Model.VoteAverage.HasValue)
-                {
-                    <span>&bull; ⭐ @Model.VoteAverage.Value.ToString("0.1")/100</span>
-                }
-            </p>
+        <!-- 2-Column Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <!-- Left Column: Poster & Save Action -->
+            <div class="md:col-span-4 max-w-sm mx-auto md:mx-0 w-full">
+                <div class="relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#111522]">
+                    @if (!string.IsNullOrEmpty(Model.PosterPath))
+                    {
+                        <img src="https://wsrv.nl/?url=image.tmdb.org/t/p/w500@(Model.PosterPath)" alt="@Model.Title" class="w-full h-full object-cover" onerror="this.src='/images/movie_poster_fallback.jpg';" />
+                    }
+                    else
+                    {
+                        <img src="/images/movie_poster_fallback.jpg" alt="@Model.Title" class="w-full h-full object-cover" />
+                    }
+                </div>
 
-            <h4 class="mb-3 border-bottom border-secondary pb-2">Overview</h4>
-            <p class="fs-5 text-light opacity-75 mb-4" style="line-height: 1.6;">
-                @(string.IsNullOrEmpty(Model.Overview) ? "No overview available." : Model.Overview)
-            </p>
+                <!-- Primary Save Button under poster -->
+                <button type="button"
+                        class="w-full mt-4 py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer border-0 @(isInAnyList ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40" : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30")"
+                        data-bs-toggle="modal"
+                        data-bs-target="#watchlistModal">
+                    @if (isInAnyList)
+                    {
+                        <span>✓ Saved in Watchlist</span>
+                    }
+                    else
+                    {
+                        <span>+ Add to Watchlist</span>
+                    }
+                </button>
+            </div>
 
-            <h4 class="mb-3 border-bottom border-secondary pb-2">Top Cast</h4>
-            <p class="fs-5 text-light opacity-75">
-                @if (Model.Credits?.Cast != null && Model.Credits.Cast.Any())
-                {
-                    @string.Join(", ", Model.Credits.Cast.Take(6).Select(c => c.Name))
-                }
-                else
-                {
-                    <span>Cast information unavailable.</span>
-                }
-            </p>
+            <!-- Right Column: Details, Overview, Cast -->
+            <div class="md:col-span-8">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight font-display mb-3">
+                    @Model.Title
+                </h1>
+
+                <!-- Unboxed Metadata -->
+                <div class="flex flex-wrap items-center gap-3 text-sm text-slate-400 mb-8 font-medium">
+                    <span class="flex items-center gap-1.5 text-slate-300">
+                        <span>📅</span>
+                        <span>@year</span>
+                    </span>
+
+                    @if (Model.Runtime.HasValue && Model.Runtime > 0)
+                    {
+                        <span aria-hidden="true" class="opacity-40">·</span>
+                        <span class="flex items-center gap-1.5 text-slate-300">
+                            <span>⏱</span>
+                            <span>@Model.Runtime min</span>
+                        </span>
+                    }
+
+                    @if (rating != null)
+                    {
+                        <span aria-hidden="true" class="opacity-40">·</span>
+                        <span class="flex items-center gap-1.5 text-amber-300 font-semibold">
+                            <span>⭐</span>
+                            <span>@rating / 100</span>
+                        </span>
+                    }
+                </div>
+
+                <!-- Overview Section -->
+                <div class="mb-10">
+                    <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider border-b border-white/[0.08] pb-2 mb-3">
+                        Overview
+                    </h2>
+                    <p class="text-slate-300 text-base sm:text-lg leading-relaxed font-light">
+                        @(string.IsNullOrEmpty(Model.Overview) ? "No overview available for this title." : Model.Overview)
+                    </p>
+                </div>
+
+                <!-- Top Cast & Characters Section -->
+                <div>
+                    <div class="flex items-center gap-2 border-b border-white/[0.08] pb-2 mb-4">
+                        <span class="text-indigo-400">👥</span>
+                        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider">
+                            Top Cast & Characters
+                        </h2>
+                    </div>
+
+                    @if (Model.Credits?.Cast != null && Model.Credits.Cast.Any())
+                    {
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @foreach (var member in Model.Credits.Cast.Take(12))
+                            {
+                                <div class="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors">
+                                    @if (!string.IsNullOrEmpty(member.ProfilePath))
+                                    {
+                                        <img src="https://wsrv.nl/?url=image.tmdb.org/t/p/w185@(member.ProfilePath)" alt="@member.Name" class="w-11 h-11 rounded-lg object-cover flex-shrink-0 border border-white/10" onerror="this.style.display='none';" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-11 h-11 rounded-lg bg-indigo-950/60 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 text-indigo-400 font-semibold text-xs">
+                                            @(!string.IsNullOrEmpty(member.Name) && member.Name.Length >= 2 ? member.Name.Substring(0, 2).ToUpper() : "?")
+                                        </div>
+                                    }
+
+                                    <div class="min-w-0 flex-1">
+                                        <h4 class="text-xs sm:text-sm font-semibold text-white truncate m-0">
+                                            @member.Name
+                                        </h4>
+                                        @if (!string.IsNullOrEmpty(member.Character))
+                                        {
+                                            <p class="text-[11px] sm:text-xs text-indigo-300/80 truncate mt-0.5 mb-0">
+                                                as @member.Character
+                                            </p>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-[11px] text-slate-500 italic mt-0.5 mb-0">
+                                                Role unspecified
+                                            </p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-slate-500 text-sm italic">
+                            Cast information unavailable.
+                        </p>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Floating Action Button (FAB) -->
-<button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center" 
-        style="position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; font-size: 32px; z-index: 1000;"
-        data-bs-toggle="modal" data-bs-target="#watchlistModal">
-    +
-</button>
-
 <!-- List Management Modal -->
 <div class="modal fade" id="watchlistModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title">Save to List</h5>
+        <div class="modal-content" style="background-color: #0e121d; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; overflow: hidden; color: #fff;">
+            <div class="modal-header" style="background-color: #121726; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1rem 1.5rem;">
+                <h5 class="modal-title font-bold text-white text-base">Save to List</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-6">
+                <p class="text-xs text-slate-400 mb-3">
+                    Select lists to include <span class="text-white font-medium">"@Model.Title"</span>:
+                </p>
+
                 @if (userLists != null && userLists.Any())
                 {
-                    <ul class="list-group list-group-flush mb-4 rounded">
+                    <div class="space-y-2 max-h-60 overflow-y-auto mb-4 pr-1">
                         @foreach (var list in userLists)
                         {
-                            // Check if this exact movie is already saved in this specific list                            
                             bool isInList = list.WatchlistItems != null && list.WatchlistItems.Any(i => i.TmdbId == Model.Id);
                             
-                            <li class="list-group-item bg-black text-white border-secondary d-flex justify-content-between align-items-center">
-                                @list.Name
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors">
+                                <div>
+                                    <h4 class="text-sm font-semibold text-white m-0">@list.Name</h4>
+                                    <p class="text-[11px] text-slate-400 font-mono m-0 mt-0.5">
+                                        @(list.WatchlistItems?.Count ?? 0) movies
+                                    </p>
+                                </div>
+
                                 <form asp-controller="Watchlist" asp-action="Toggle" method="post" class="m-0">
                                     <input type="hidden" name="tmdbId" value="@Model.Id" />
                                     <input type="hidden" name="title" value="@Model.Title" />
@@ -83,27 +194,34 @@
                                     
                                     @if (isInList)
                                     {
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="width: 75px;">Remove</button>
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 cursor-pointer">
+                                            ✓ Saved
+                                        </button>
                                     }
                                     else
                                     {
-                                        <button type="submit" class="btn btn-sm btn-success" style="width: 75px;">Add</button>
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm cursor-pointer border-0">
+                                            + Add
+                                        </button>
                                     }
                                 </form>
-                            </li>
+                            </div>
                         }
-                    </ul>
+                    </div>
                 }
                 else
                 {
-                    <p class="text-muted mb-4 text-center">No lists created yet.</p>
+                    <p class="text-sm text-slate-500 text-center py-4">No lists created yet.</p>
                 }
 
                 <!-- Create New List Form -->
-                <form asp-controller="Watchlist" asp-action="CreateCategoryFromDetails" method="post" class="d-flex gap-2">
-                    <input type="hidden" name="returnTmdbId" value="@Model.Id" />
-                    <input type="text" name="categoryName" class="form-control bg-black text-white border-secondary" placeholder="New list name..." required />
-                    <button type="submit" class="btn btn-primary">Create</button>
+                <form asp-controller="Watchlist" asp-action="CreateCategoryFromDetails" method="post" class="pt-4 border-t border-white/[0.08]">
+                    <label class="block text-xs font-medium text-slate-300 mb-2">Create New List</label>
+                    <div class="flex gap-2">
+                        <input type="hidden" name="returnTmdbId" value="@Model.Id" />
+                        <input type="text" name="categoryName" class="flex-1 px-3.5 py-2 text-xs bg-black/40 text-white border border-white/10 rounded-lg focus:outline-none focus:border-indigo-500 placeholder:text-slate-500" placeholder="e.g. Weekend Binge..." required />
+                        <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors cursor-pointer border-0 whitespace-nowrap">Create</button>
+                    </div>
                 </form>
             </div>
         </div>
