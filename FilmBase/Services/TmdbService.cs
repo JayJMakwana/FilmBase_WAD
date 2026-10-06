@@ -25,7 +25,8 @@ namespace FilmBase.Services
             if (string.IsNullOrWhiteSpace(query))
                 return new List<TmdbMovieDto>();
 
-            var response = await _httpClient.GetAsync($"{_workerUrl}/search/movie?query={Uri.EscapeDataString(query)}&page={page}");
+            // Switched to 'multi' for TV + Movies
+            var response = await _httpClient.GetAsync($"{_workerUrl}/search/multi?query={Uri.EscapeDataString(query)}&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -52,6 +53,16 @@ namespace FilmBase.Services
             return data?.Results ?? new List<TmdbMovieDto>();
         }
 
+        public async Task<IEnumerable<TmdbMovieDto>> GetPopularSeriesAsync(int page = 1)
+        {
+            // TV endpoint
+            var response = await _httpClient.GetAsync($"{_workerUrl}/tv/popular?page={page}");
+            response.EnsureSuccessStatusCode();
+            var jsonString = await response.Content.ReadAsStringAsync();
+            var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return data?.Results ?? new List<TmdbMovieDto>();
+        }
+
         public async Task<IEnumerable<TmdbMovieDto>> GetNewReleasedMoviesAsync(int page = 1)
         {
             var response = await _httpClient.GetAsync($"{_workerUrl}/movie/now_playing?page={page}");
@@ -63,7 +74,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetOscarsWinningMoviesAsync(int page = 1)
         {
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?sort_by=vote_average.desc&vote_count.gte=10000&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?sort_by=vote_average.desc&vote_count.gte=10000&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -72,7 +83,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetEnglishMoviesAsync(int page = 1)
         {
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=en&sort_by=popularity.desc&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=en&sort_by=popularity.desc&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -81,7 +92,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetHindiMoviesAsync(int page = 1)
         {
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=hi&sort_by=popularity.desc&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=hi&sort_by=popularity.desc&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -90,6 +101,8 @@ namespace FilmBase.Services
 
         public async Task<TmdbMovieDto> GetMovieDetailsAsync(int id)
         {
+            // Note: If you want details for TV shows, you will eventually need a dynamic check for /movie/{id} vs /tv/{id}.
+            // For now, this remains the movie detail endpoint.
             var response = await _httpClient.GetAsync($"{_workerUrl}/movie/{id}?append_to_response=credits");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
@@ -99,7 +112,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> DiscoverMoviesAsync(string filterType, string filterValue, int page = 1)
         {
-            string endpoint = $"/discover/movie?page={page}&";
+            string endpoint = $"/discover/movie?page={page}&include_adult=true&";
 
             if (filterType == "year")
                 endpoint += $"primary_release_year={filterValue}";
@@ -118,7 +131,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetAnimationMoviesAsync(int page = 1)
         {
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_genres=16&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_genres=16&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -127,7 +140,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetHorrorMoviesAsync(int page = 1)
         {
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_genres=27&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_genres=27&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -136,7 +149,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetSciFiMoviesAsync(int page = 1)
         {
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_genres=878&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_genres=878&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -145,7 +158,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetGujaratiMoviesAsync(int page = 1)
         {
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=gu&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=gu&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -154,8 +167,7 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetSouthIndianMoviesAsync(int page = 1)
         {
-            // Combines Tamil, Telugu, Malayalam, and Kannada
-            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=ta|te|ml|kn&sort_by=popularity.desc&page={page}");
+            var response = await _httpClient.GetAsync($"{_workerUrl}/discover/movie?with_original_language=ta|te|ml|kn&sort_by=popularity.desc&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });

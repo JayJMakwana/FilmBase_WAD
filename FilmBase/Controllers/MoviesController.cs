@@ -16,12 +16,12 @@ namespace FilmBase.Controllers
             _watchlistRepository = watchlistRepository;
         }
 
-        // 1. HOME PAGE: Loads the horizontal rows
         public async Task<IActionResult> Index()
         {
             var viewModel = new HomePageViewModel
             {
                 TrendingMovies = await _movieService.GetTrendingMoviesAsync(),
+                PopularSeries = await _movieService.GetPopularSeriesAsync(),
                 TopRatedMovies = await _movieService.GetTopRatedMoviesAsync(),
                 NewReleasedMovies = await _movieService.GetNewReleasedMoviesAsync(),
                 OscarsWinningMovies = await _movieService.GetOscarsWinningMoviesAsync(),
@@ -33,11 +33,9 @@ namespace FilmBase.Controllers
                 GujaratiMovies = await _movieService.GetGujaratiMoviesAsync()
             };
 
-
             return View(viewModel);
         }
 
-        // 2. SEARCH PAGE: Handles queries from the search bar
         public async Task<IActionResult> Search(string query)
         {
             if (string.IsNullOrEmpty(query))
@@ -49,15 +47,13 @@ namespace FilmBase.Controllers
             return View(movies);
         }
 
-        // 3. DETAILS PAGE: Shows plot and watchlist dropdown
         public async Task<IActionResult> Details(int id)
         {
             var movieDetails = await _movieService.GetMovieDetailsAsync(id);
-
             ViewBag.UserLists = await _watchlistRepository.GetAllCategoriesWithItemsAsync();
-
             return View(movieDetails);
         }
+
         public async Task<IActionResult> Discover(string query, string filterType, string filterValue, string filterName, int page = 1, bool ajax = false)
         {
             ViewData["CurrentQuery"] = query;
@@ -76,15 +72,14 @@ namespace FilmBase.Controllers
                 movies = await _movieService.DiscoverMoviesAsync(filterType, filterValue, page);
             }
 
-            // If JavaScript is asking for more results, ONLY return the raw HTML for the cards
             if (ajax)
             {
                 return PartialView("_MovieCards", movies);
             }
 
-            // Otherwise, return the full page
             return View(movies);
         }
+
         public async Task<IActionResult> Browse(string category, int page = 1, bool ajax = false)
         {
             IEnumerable<FilmBase.Models.DTOs.TmdbMovieDto> movies = new List<FilmBase.Models.DTOs.TmdbMovieDto>();
@@ -99,6 +94,10 @@ namespace FilmBase.Controllers
                 case "trending":
                     movies = await _movieService.GetTrendingMoviesAsync(page);
                     viewTitle = "Trending This Week";
+                    break;
+                case "series":
+                    movies = await _movieService.GetPopularSeriesAsync(page);
+                    viewTitle = "Popular TV Series";
                     break;
                 case "toprated":
                     movies = await _movieService.GetTopRatedMoviesAsync(page);

@@ -19,10 +19,17 @@ namespace FilmBase.Models.DTOs
         [JsonPropertyName("release_date")]
         public string? ReleaseDate { get; set; }
 
+        // Added for TV Series
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        // Added for TV Series
+        [JsonPropertyName("first_air_date")]
+        public string? FirstAirDate { get; set; }
+
         [JsonPropertyName("poster_path")]
         public string? PosterPath { get; set; }
 
-        // Added for the Details View
         [JsonPropertyName("overview")]
         public string? Overview { get; set; }
 
@@ -31,13 +38,14 @@ namespace FilmBase.Models.DTOs
 
         [JsonPropertyName("backdrop_path")]
         public string? BackdropPath { get; set; }
-        // Add these inside the existing TmdbMovieDto class
+
         [JsonPropertyName("vote_average")]
         public double? VoteAverage { get; set; }
 
         [JsonPropertyName("credits")]
         public TmdbCredits? Credits { get; set; }
     }
+
     public class TmdbCredits
     {
         [JsonPropertyName("cast")]
