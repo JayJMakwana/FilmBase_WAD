@@ -1,0 +1,116 @@
+﻿@model FilmBase.Models.FriendsViewModel
+@{
+    ViewData["Title"] = "Friends";
+}
+
+<div class="py-4 max-w-4xl mx-auto space-y-10">
+    <!-- Header & Search -->
+    <div class="border-b border-white/[0.08] pb-6">
+        <h1 class="text-3xl font-extrabold text-white font-display mb-2">Friends</h1>
+        <p class="text-xs text-slate-400 mb-6">Find friends by username or email to check out their watchlists</p>
+
+        <form method="get" asp-action="Index" class="flex gap-2 max-w-lg">
+            <input type="text" name="search" value="@Model.SearchQuery" placeholder="Search username or email..." class="flex-1 px-4 py-2.5 text-sm bg-[#101422] text-white border border-white/10 rounded-xl focus:outline-none focus:border-indigo-500" />
+            <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl cursor-pointer border-0">Search</button>
+        </form>
+    </div>
+
+    <!-- Search Results -->
+    @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+    {
+        <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+            <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4">Search Results</h2>
+            @if (Model.SearchResults.Any())
+            {
+                <div class="space-y-3">
+                    @foreach (var user in Model.SearchResults)
+                    {
+                        bool isFriend = Model.Friends.Any(f => f.Uid == user.Uid);
+                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                            <div>
+                                <p class="text-sm font-semibold text-white m-0">@user.Username</p>
+                                <p class="text-xs text-slate-400 m-0">@user.Email</p>
+                            </div>
+                            @if (isFriend)
+                            {
+                                <a asp-action="Watchlists" asp-route-friendUid="@user.Uid" class="px-3.5 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold text-decoration-none">View Lists</a>
+                            }
+                            else
+                            {
+                                <form asp-action="SendRequest" method="post" class="m-0">
+                                    <input type="hidden" name="targetUid" value="@user.Uid" />
+                                    <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer border-0">+ Add Friend</button>
+                                </form>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-xs text-slate-400 m-0">No users found matching "@Model.SearchQuery".</p>
+            }
+        </div>
+    }
+
+    <!-- Incoming Requests -->
+    @if (Model.IncomingRequests.Any())
+    {
+        <div class="p-6 rounded-2xl bg-indigo-500/[0.05] border border-indigo-500/20">
+            <h2 class="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-4">Friend Requests (@Model.IncomingRequests.Count)</h2>
+            <div class="space-y-3">
+                @foreach (var req in Model.IncomingRequests)
+                {
+                    <div class="flex items-center justify-between p-3.5 rounded-xl bg-black/30 border border-white/[0.06]">
+                        <div>
+                            <p class="text-sm font-semibold text-white m-0">@req.Username</p>
+                            <p class="text-xs text-slate-400 m-0">@req.Email</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <form asp-action="AcceptRequest" method="post" class="m-0">
+                                <input type="hidden" name="requesterUid" value="@req.Uid" />
+                                <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer border-0">Accept</button>
+                            </form>
+                            <form asp-action="DeclineRequest" method="post" class="m-0">
+                                <input type="hidden" name="requesterUid" value="@req.Uid" />
+                                <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-rose-500/20 text-slate-300 text-xs font-semibold cursor-pointer border-0">Decline</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- My Friends List -->
+    <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4">My Friends (@Model.Friends.Count)</h2>
+        @if (Model.Friends.Any())
+        {
+            <div class="space-y-3">
+                @foreach (var friend in Model.Friends)
+                {
+                    <div class="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                        <div>
+                            <p class="text-sm font-semibold text-white m-0">@friend.Username</p>
+                            <p class="text-xs text-slate-400 m-0">@friend.Email</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a asp-action="Watchlists" asp-route-friendUid="@friend.Uid" class="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold text-decoration-none">
+                                Check Lists →
+                            </a>
+                            <form asp-action="RemoveFriend" method="post" class="m-0">
+                                <input type="hidden" name="friendUid" value="@friend.Uid" />
+                                <button type="submit" class="px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-xs cursor-pointer border-0">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-xs text-slate-400 m-0">You haven't added any friends yet. Search above to connect!</p>
+        }
+    </div>
+</div>

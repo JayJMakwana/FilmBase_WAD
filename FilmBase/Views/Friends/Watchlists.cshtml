@@ -1,0 +1,73 @@
+﻿@model IEnumerable<FilmBase.Models.CloudWatchlist>
+@{
+    var friendUid = ViewData["FriendUid"] as string ?? string.Empty;
+    var friendName = ViewData["FriendName"] as string ?? "Friend";
+    ViewData["Title"] = $"{friendName}'s Watchlists";
+}
+
+<div class="py-4 max-w-5xl mx-auto">
+    <div class="flex items-center justify-between border-b border-white/[0.08] pb-6 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white font-display m-0">@friendName's Watchlists</h1>
+            <p class="text-xs text-slate-400 mt-1 mb-0">Select a collection to browse what @friendName has saved</p>
+        </div>
+        <a asp-action="Index" class="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 text-xs font-medium border border-white/10 text-decoration-none">
+            ← Back to Friends
+        </a>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="space-y-4">
+            @foreach (var list in Model)
+            {
+                var count = list.Items?.Count ?? 0;
+                var previews = list.Items?.Take(4).ToList() ?? new List<FilmBase.Models.CloudMovie>();
+
+                <a asp-action="ListDetails"
+                   asp-route-friendUid="@friendUid"
+                   asp-route-listId="@list.Id"
+                   class="flex items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.08] hover:border-indigo-500/40 transition-all text-decoration-none group">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="flex -space-x-3 flex-shrink-0">
+                            @if (previews.Any())
+                            {
+                                foreach (var item in previews)
+                                {
+                                    <div class="w-11 h-16 rounded-lg overflow-hidden border border-white/15 bg-[#111522] shadow-md">
+                                        <img src="@(!string.IsNullOrEmpty(item.PosterPath) ? $"https://wsrv.nl/?url=image.tmdb.org/t/p/w185{item.PosterPath}" : "/images/movie_poster_fallback.jpg")"
+                                             alt="@item.Title"
+                                             class="w-full h-full object-cover" />
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="w-11 h-16 rounded-lg border border-dashed border-white/15 bg-white/[0.02] flex items-center justify-center text-slate-500 text-sm">
+                                    🎬
+                                </div>
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <h2 class="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors font-display truncate m-0">
+                                @list.Name
+                            </h2>
+                            <p class="text-xs text-slate-400 font-mono mt-1 mb-0">
+                                @count @(count == 1 ? "title" : "titles")
+                            </p>
+                        </div>
+                    </div>
+
+                    <span class="px-3.5 py-1.5 rounded-lg bg-indigo-600/20 group-hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold flex-shrink-0 transition-colors">
+                        Open List →
+                    </span>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-sm text-slate-400 text-center py-16">@friendName hasn't created any watchlists yet.</p>
+    }
+</div>

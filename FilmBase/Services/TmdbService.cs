@@ -25,14 +25,13 @@ namespace FilmBase.Services
             if (string.IsNullOrWhiteSpace(query))
                 return new List<TmdbMovieDto>();
 
-            // Switched to 'multi' for TV + Movies
             var response = await _httpClient.GetAsync($"{_workerUrl}/search/multi?query={Uri.EscapeDataString(query)}&include_adult=true&page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, options);
 
-            return data?.Results ?? new List<TmdbMovieDto>();
+            return data?.Results?.Where(r => r.MediaType == "movie" || r.MediaType == "tv") ?? new List<TmdbMovieDto>();
         }
 
         public async Task<IEnumerable<TmdbMovieDto>> GetTrendingMoviesAsync(int page = 1)
@@ -55,12 +54,18 @@ namespace FilmBase.Services
 
         public async Task<IEnumerable<TmdbMovieDto>> GetPopularSeriesAsync(int page = 1)
         {
-            // TV endpoint
             var response = await _httpClient.GetAsync($"{_workerUrl}/tv/popular?page={page}");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<TmdbSearchResponse>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return data?.Results ?? new List<TmdbMovieDto>();
+            var results = data?.Results ?? new List<TmdbMovieDto>();
+
+            foreach (var show in results)
+            {
+                show.MediaType = "tv";
+            }
+
+            return results;
         }
 
         public async Task<IEnumerable<TmdbMovieDto>> GetNewReleasedMoviesAsync(int page = 1)
@@ -99,15 +104,16 @@ namespace FilmBase.Services
             return data?.Results ?? new List<TmdbMovieDto>();
         }
 
-        public async Task<TmdbMovieDto> GetMovieDetailsAsync(int id)
+        public async Task<TmdbMovieDto> GetMovieDetailsAsync(int id, string mediaType = "movie")
         {
-            // Note: If you want details for TV shows, you will eventually need a dynamic check for /movie/{id} vs /tv/{id}.
-            // For now, this remains the movie detail endpoint.
-            var response = await _httpClient.GetAsync($"{_workerUrl}/movie/{id}?append_to_response=credits");
+            var type = mediaType?.ToLower() == "tv" ? "tv" : "movie";
+            var response = await _httpClient.GetAsync($"{_workerUrl}/{type}/{id}?append_to_response=credits");
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            return JsonSerializer.Deserialize<TmdbMovieDto>(jsonString, options) ?? new TmdbMovieDto();
+            var item = JsonSerializer.Deserialize<TmdbMovieDto>(jsonString, options) ?? new TmdbMovieDto();
+            item.MediaType = type;
+            return item;
         }
 
         public async Task<IEnumerable<TmdbMovieDto>> DiscoverMoviesAsync(string filterType, string filterValue, int page = 1)

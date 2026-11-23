@@ -4,7 +4,7 @@ namespace FilmBase.Services
 {
     public interface IMovieApiService
     {
-        Task<TmdbMovieDto> GetMovieDetailsAsync(int id);
+        Task<TmdbMovieDto> GetMovieDetailsAsync(int id, string mediaType = "movie");
         Task<IEnumerable<TmdbMovieDto>> SearchMoviesAsync(string query, int page = 1);
         Task<IEnumerable<TmdbMovieDto>> DiscoverMoviesAsync(string filterType, string filterValue, int page = 1);
         Task<IEnumerable<TmdbMovieDto>> GetTrendingMoviesAsync(int page = 1);

@@ -1,81 +1,82 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using FilmBase.Data;
-using FilmBase.Models;
-using FilmBase.Repositories;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using FilmBase.Services;
 
 namespace FilmBase.Controllers
 {
+    [Authorize]
     public class WatchlistController : Controller
     {
-        private readonly IWatchlistRepository _repository;
-        private readonly FilmBaseContext _context;
+        private readonly FirestoreService _firestore;
 
-        // Inject BOTH the repository and the database context
-        public WatchlistController(IWatchlistRepository repository, FilmBaseContext context)
+        public WatchlistController(FirestoreService firestore)
         {
-            _repository = repository;
-            _context = context;
+            _firestore = firestore;
         }
+
+        private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
         public async Task<IActionResult> Index()
         {
-            var categories = await _repository.GetAllCategoriesWithItemsAsync();
-            return View(categories);
+            var lists = await _firestore.GetUserWatchlistsAsync(CurrentUserId);
+            return View(lists);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddToWatchlist(int tmdbId, string title, string posterPath, int categoryId)
+        public async Task<IActionResult> Details(string id)
         {
-            if (tmdbId > 0 && categoryId > 0)
-            {
-                await _repository.AddToWatchlistFromTmdbAsync(tmdbId, title, posterPath, categoryId);
+            if (string.IsNullOrEmpty(id))
                 return RedirectToAction("Index");
-            }
-            return RedirectToAction("Index", "Movies");
+
+            var lists = await _firestore.GetUserWatchlistsAsync(CurrentUserId);
+            var list = lists.FirstOrDefault(l => l.Id == id);
+
+            if (list == null)
+                return RedirectToAction("Index");
+
+            return View(list);
         }
+
         [HttpPost]
-        public async Task<IActionResult> Toggle(int tmdbId, string title, string posterPath, int categoryId)
+        public async Task<IActionResult> Toggle(int tmdbId, string title, string posterPath, string categoryId, string mediaType = "movie", string? returnTo = null)
         {
-            var category = await _context.Categories
-                .Include(c => c.WatchlistItems)
-                .FirstOrDefaultAsync(c => c.Id == categoryId);
-
-            if (category != null)
+            if (!string.IsNullOrEmpty(categoryId) && tmdbId > 0)
             {
-                var existingItem = category.WatchlistItems.FirstOrDefault(i => i.TmdbId == tmdbId);
-                if (existingItem != null)
-                {
-                    // Movie is in list, so remove it
-                    _context.WatchlistItems.Remove(existingItem);
-                }
-                else
-                {
-                    // Movie is not in list, so add it
-                    category.WatchlistItems.Add(new WatchlistItem
-                    {
-                        TmdbId = tmdbId,
-                        Title = title,
-                        PosterPath = posterPath,
-                        CategoryId = categoryId
-                    });
-                }
-                await _context.SaveChangesAsync();
+                await _firestore.ToggleMovieInListAsync(CurrentUserId, categoryId, tmdbId, title, posterPath, mediaType);
             }
 
-            // Redirect back to the exact movie details page you were just on
-            return RedirectToAction("Details", "Movies", new { id = tmdbId });
+            if (returnTo == "list")
+                return RedirectToAction("Details", new { id = categoryId });
+
+            if (returnTo == "watchlist")
+                return RedirectToAction("Index");
+
+            return RedirectToAction("Details", "Movies", new { id = tmdbId, mediaType });
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCategoryFromDetails(string categoryName, int returnTmdbId)
+        public async Task<IActionResult> CreateCategoryFromDetails(string categoryName, int returnTmdbId, string returnMediaType = "movie")
         {
             if (!string.IsNullOrWhiteSpace(categoryName))
             {
-                _context.Categories.Add(new Category { Name = categoryName });
-                await _context.SaveChangesAsync();
+                await _firestore.CreateWatchlistAsync(CurrentUserId, categoryName);
             }
-            return RedirectToAction("Details", "Movies", new { id = returnTmdbId });
+
+            if (returnTmdbId > 0)
+                return RedirectToAction("Details", "Movies", new { id = returnTmdbId, mediaType = returnMediaType });
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteList(string categoryId)
+        {
+            if (!string.IsNullOrEmpty(categoryId))
+            {
+                await _firestore.DeleteWatchlistAsync(CurrentUserId, categoryId);
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

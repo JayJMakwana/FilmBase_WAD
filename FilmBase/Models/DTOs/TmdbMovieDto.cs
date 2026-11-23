@@ -19,13 +19,14 @@ namespace FilmBase.Models.DTOs
         [JsonPropertyName("release_date")]
         public string? ReleaseDate { get; set; }
 
-        // Added for TV Series
         [JsonPropertyName("name")]
         public string? Name { get; set; }
 
-        // Added for TV Series
         [JsonPropertyName("first_air_date")]
         public string? FirstAirDate { get; set; }
+
+        [JsonPropertyName("media_type")]
+        public string? MediaType { get; set; }
 
         [JsonPropertyName("poster_path")]
         public string? PosterPath { get; set; }
@@ -44,6 +45,14 @@ namespace FilmBase.Models.DTOs
 
         [JsonPropertyName("credits")]
         public TmdbCredits? Credits { get; set; }
+
+        [JsonIgnore]
+        public string DisplayTitle => !string.IsNullOrEmpty(Title) ? Title : (Name ?? "Untitled");
+
+        [JsonIgnore]
+        public string ResolvedMediaType => !string.IsNullOrEmpty(MediaType)
+            ? MediaType.ToLower()
+            : (!string.IsNullOrEmpty(Name) && string.IsNullOrEmpty(Title) ? "tv" : "movie");
     }
 
     public class TmdbCredits

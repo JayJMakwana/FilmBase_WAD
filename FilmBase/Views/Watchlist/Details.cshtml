@@ -1,0 +1,89 @@
+﻿@model FilmBase.Models.CloudWatchlist
+
+@{
+    ViewData["Title"] = Model.Name;
+    var count = Model.Items?.Count ?? 0;
+}
+
+<div class="py-4">
+    <!-- Top Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-6 mb-10">
+        <div>
+            <div class="mb-2">
+                <a asp-controller="Watchlist" asp-action="Index"
+                   class="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 text-decoration-none">
+                    <span>←</span>
+                    <span>Back to All Lists</span>
+                </a>
+            </div>
+            <div class="flex items-baseline gap-3">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-display m-0">
+                    @Model.Name
+                </h1>
+                <span class="text-xs text-slate-500 font-mono">
+                    @count @(count == 1 ? "title" : "titles")
+                </span>
+            </div>
+        </div>
+
+        <form asp-controller="Watchlist" asp-action="DeleteList" method="post" class="m-0">
+            <input type="hidden" name="categoryId" value="@Model.Id" />
+            <button type="submit"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 cursor-pointer bg-transparent transition-colors">
+                Delete List
+            </button>
+        </form>
+    </div>
+
+    <!-- Titles Grid -->
+    @if (Model.Items != null && Model.Items.Any())
+    {
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            @foreach (var item in Model.Items)
+            {
+                <div class="group relative rounded-xl overflow-hidden bg-[#111522] border border-white/[0.08] shadow-md transition-all hover:scale-[1.03] hover:border-indigo-500/50">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.TmdbId" asp-route-mediaType="@item.MediaType" class="block aspect-[2/3] w-full text-decoration-none">
+                        @if (!string.IsNullOrEmpty(item.PosterPath))
+                        {
+                            <img src="https://wsrv.nl/?url=image.tmdb.org/t/p/w500@(item.PosterPath)" alt="@item.Title" class="w-full h-full object-cover" onerror="this.src='/images/movie_poster_fallback.jpg';" />
+                        }
+                        else
+                        {
+                            <img src="/images/movie_poster_fallback.jpg" alt="@item.Title" class="w-full h-full object-cover" />
+                        }
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    </a>
+
+                    <div class="absolute bottom-0 inset-x-0 p-2.5 flex items-center justify-between gap-1 pointer-events-auto">
+                        <span class="text-xs font-semibold text-white truncate">
+                            @item.Title
+                        </span>
+                        <form asp-controller="Watchlist" asp-action="Toggle" method="post" class="m-0">
+                            <input type="hidden" name="tmdbId" value="@item.TmdbId" />
+                            <input type="hidden" name="title" value="@item.Title" />
+                            <input type="hidden" name="posterPath" value="@item.PosterPath" />
+                            <input type="hidden" name="categoryId" value="@Model.Id" />
+                            <input type="hidden" name="mediaType" value="@item.MediaType" />
+                            <input type="hidden" name="returnTo" value="list" />
+                            <button type="submit"
+                                    class="p-1 rounded bg-black/60 hover:bg-rose-500/30 text-slate-400 hover:text-rose-300 transition-colors text-xs border-0 cursor-pointer"
+                                    title="Remove from list">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="py-16 text-center border border-dashed border-white/[0.08] rounded-2xl bg-white/[0.01]">
+            <p class="text-sm text-slate-400 mb-4">This list doesn't have any titles yet.</p>
+            <a asp-controller="Movies" asp-action="Discover" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold text-decoration-none">
+                <span>🧭</span>
+                <span>Browse Titles to Add</span>
+            </a>
+        </div>
+    }
+</div>

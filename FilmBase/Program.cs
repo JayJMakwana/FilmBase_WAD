@@ -1,3 +1,5 @@
+using Google.Cloud.Firestore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using FilmBase.Data;
 using FilmBase.Repositories;
@@ -5,45 +7,49 @@ using FilmBase.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// 1. Register the SQLite Database Context
+// 1. Register Firestore
+var firebaseProjectId = builder.Configuration["Firebase:ProjectId"];
+var credPath = Path.Combine(builder.Environment.ContentRootPath, builder.Configuration["Firebase:CredentialsPath"] ?? "firebase-key.json");
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credPath);
+builder.Services.AddSingleton(_ => FirestoreDb.Create(firebaseProjectId));
+
+// 2. Register Cookie Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromDays(14);
+    });
+
+// 3. Register Services (Keeping SQLite temporarily until Part 2 migration)
 builder.Services.AddDbContext<FilmBaseContext>(options =>
     options.UseSqlite("Data Source=filmbase_v2.db"));
-
-// 2. Register the OMDb API Service with HttpClient
 builder.Services.AddHttpClient<IMovieApiService, TmdbService>();
-
-// 3. Register the Watchlist Repository
+builder.Services.AddHttpClient<FirebaseAuthService>();
+builder.Services.AddScoped<FirestoreService>();
 builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
-
+builder.Services.AddMemoryCache();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
+// Order matters: Authentication MUST come before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Set the default route to open the MoviesController immediately
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Movies}/{action=Index}/{id?}");
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<FilmBase.Data.FilmBaseContext>();
-    dbContext.Database.EnsureCreated();
-}
 
-app.Run();
 app.Run();

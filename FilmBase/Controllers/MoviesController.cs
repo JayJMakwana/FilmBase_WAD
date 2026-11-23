@@ -1,37 +1,66 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using FilmBase.Services;
-using FilmBase.Repositories;
 using FilmBase.Models;
+using System.Security.Claims;
 
 namespace FilmBase.Controllers
 {
     public class MoviesController : Controller
     {
         private readonly IMovieApiService _movieService;
-        private readonly IWatchlistRepository _watchlistRepository;
+        private readonly FirestoreService _firestore;
+        private readonly IMemoryCache _cache;
 
-        public MoviesController(IMovieApiService movieService, IWatchlistRepository watchlistRepository)
+        public MoviesController(IMovieApiService movieService, FirestoreService firestore, IMemoryCache cache)
         {
             _movieService = movieService;
-            _watchlistRepository = watchlistRepository;
+            _firestore = firestore;
+            _cache = cache;
         }
 
         public async Task<IActionResult> Index()
         {
-            var viewModel = new HomePageViewModel
+            if (!_cache.TryGetValue("HomePageData", out HomePageViewModel? viewModel) || viewModel == null)
             {
-                TrendingMovies = await _movieService.GetTrendingMoviesAsync(),
-                PopularSeries = await _movieService.GetPopularSeriesAsync(),
-                TopRatedMovies = await _movieService.GetTopRatedMoviesAsync(),
-                NewReleasedMovies = await _movieService.GetNewReleasedMoviesAsync(),
-                OscarsWinningMovies = await _movieService.GetOscarsWinningMoviesAsync(),
-                EnglishMovies = await _movieService.GetEnglishMoviesAsync(),
-                HindiMovies = await _movieService.GetHindiMoviesAsync(),
-                AnimationMovies = await _movieService.GetAnimationMoviesAsync(),
-                HorrorMovies = await _movieService.GetHorrorMoviesAsync(),
-                SciFiMovies = await _movieService.GetSciFiMoviesAsync(),
-                GujaratiMovies = await _movieService.GetGujaratiMoviesAsync()
-            };
+                // Fire all 11 API calls simultaneously
+                var trendingTask = _movieService.GetTrendingMoviesAsync();
+                var seriesTask = _movieService.GetPopularSeriesAsync();
+                var topRatedTask = _movieService.GetTopRatedMoviesAsync();
+                var newReleasesTask = _movieService.GetNewReleasedMoviesAsync();
+                var oscarsTask = _movieService.GetOscarsWinningMoviesAsync();
+                var englishTask = _movieService.GetEnglishMoviesAsync();
+                var hindiTask = _movieService.GetHindiMoviesAsync();
+                var animationTask = _movieService.GetAnimationMoviesAsync();
+                var horrorTask = _movieService.GetHorrorMoviesAsync();
+                var scifiTask = _movieService.GetSciFiMoviesAsync();
+                var gujaratiTask = _movieService.GetGujaratiMoviesAsync();
+
+                // Wait for all of them to finish together
+                await Task.WhenAll(
+                    trendingTask, seriesTask, topRatedTask, newReleasesTask,
+                    oscarsTask, englishTask, hindiTask, animationTask,
+                    horrorTask, scifiTask, gujaratiTask
+                );
+
+                viewModel = new HomePageViewModel
+                {
+                    TrendingMovies = await trendingTask,
+                    PopularSeries = await seriesTask,
+                    TopRatedMovies = await topRatedTask,
+                    NewReleasedMovies = await newReleasesTask,
+                    OscarsWinningMovies = await oscarsTask,
+                    EnglishMovies = await englishTask,
+                    HindiMovies = await hindiTask,
+                    AnimationMovies = await animationTask,
+                    HorrorMovies = await horrorTask,
+                    SciFiMovies = await scifiTask,
+                    GujaratiMovies = await gujaratiTask
+                };
+
+                // Cache the home page data for 30 minutes
+                _cache.Set("HomePageData", viewModel, TimeSpan.FromMinutes(30));
+            }
 
             return View(viewModel);
         }
@@ -47,10 +76,20 @@ namespace FilmBase.Controllers
             return View(movies);
         }
 
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, string mediaType = "movie")
         {
-            var movieDetails = await _movieService.GetMovieDetailsAsync(id);
-            ViewBag.UserLists = await _watchlistRepository.GetAllCategoriesWithItemsAsync();
+            var movieDetails = await _movieService.GetMovieDetailsAsync(id, mediaType);
+
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var uid = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                ViewBag.UserLists = await _firestore.GetUserWatchlistsAsync(uid);
+            }
+            else
+            {
+                ViewBag.UserLists = new List<CloudWatchlist>();
+            }
+
             return View(movieDetails);
         }
 
